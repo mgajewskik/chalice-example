@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "chalice-example"
+version = "0.1.0"
+description = ""
+authors = ["mgajewskik <mgajewskik@gmail.com>"]
+readme = "README.md"
+packages = [{include = "example"}]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[tool.poetry.group.dev.dependencies]
+chalice = "^1.27.3"
+boto3 = "^1.26.22"
+pytest = "^7.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
