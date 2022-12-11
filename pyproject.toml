@@ -7,7 +7,10 @@ readme = "README.md"
 packages = [{include = "example"}]
 
 [tool.poetry.dependencies]
+# chalice does not support python higher than 3.7 even though we want to use
+# 3.9 in lambda
 python = "^3.7"
+pydantic = "^1.10.2"
 
 [tool.poetry.group.dev.dependencies]
 chalice = "^1.27.3"
