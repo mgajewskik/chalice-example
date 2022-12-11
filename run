@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+
+PROJECT=example
+PYTHON_VERSION=3.9.16
+TF_VERSION=1.1.9
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+# TODO organize directory changes, one function or other simpler way
+# TODO hide functions that are not meant to be run directly with _ prefix
+# TODO add docstrings for each function
+
+function install {
+	echo "$PYTHON_VERSION" >.python-version
+	poetry env use python3.9
+	poetry install
+
+	# chalice does not support higher python than 3.7 so might be needed to install manually
+	# poetry run pip install chalice
+
+	echo "$TF_VERSION" >"$PROJECT"/infra/.terraform-version
+}
+
+function shell {
+	poetry shell
+}
+
+function requirements {
+	poetry export --without-hashes --format=requirements.txt | sed -e 's/;.*//' >"$PROJECT"/requirements.txt
+	echo "requirements.txt generated from pyproject.toml"
+}
+
+function gen_chalice_infra {
+	cd "$SCRIPT_DIR"
+	requirements
+	poetry run python config.py
+
+	cd "$SCRIPT_DIR/$PROJECT"
+	poetry run chalice package --pkg-format terraform infra
+
+	# example backend config - need to be moved into main config script
+	# poetry run python "$SCRIPT_DIR/$PROJECT"/infra/config_backend.py
+}
+
+function deploy_main_infra {
+	cd "$SCRIPT_DIR"/infra
+	terraform init -reconfigure
+	terraform apply -auto-approve
+}
+
+function plan {
+	deploy_main_infra
+	gen_chalice_infra
+
+	cd "$SCRIPT_DIR/$PROJECT"/infra
+	terraform init -reconfigure
+	terraform plan
+}
+
+function deploy {
+	deploy_main_infra
+	gen_chalice_infra
+
+	cd "$SCRIPT_DIR/$PROJECT"/infra
+	terraform init -reconfigure
+	terraform apply -auto-approve
+}
+
+function destroy {
+	cd "$SCRIPT_DIR/$PROJECT"/infra
+	terraform destroy -auto-approve
+
+	cd "$SCRIPT_DIR"/infra
+	terraform destroy -auto-approve
+}
+
+function local {
+	cd "$SCRIPT_DIR/$PROJECT"
+	poetry run chalice local "${@}"
+}
+
+function api {
+	cd "$SCRIPT_DIR/$PROJECT/infra"
+	terraform output EndpointURL
+}
+
+function test {
+	poetry run pytest
+}
+
+function help {
+	printf "%s <task> [args]\n\nTasks:\n" "${0}"
+	compgen -A function | grep -v "^_" | cat -n
+	printf "\nExtended help:\n  Each task has comments for general usage\n"
+}
+
+TIMEFORMAT=$'\nTask completed in %3lR'
+time "${@:-help}"

@@ -1,16 +1,17 @@
 {
-  "version": "2.0",
-  "app_name": "example",
-  "stages": {
-    "dev": {
-      "api_gateway_stage": "api",
-      "automatic_layer": true,
-      "environment_variables": {
-        "ENV": "dev"
-      },
-      "tags": {
-        "onset": "chalice"
-      }
+    "version": "2.0",
+    "app_name": "example",
+    "stages": {
+        "dev": {
+            "api_gateway_stage": "api",
+            "automatic_layer": true,
+            "environment_variables": {
+                "ENV": "dev",
+                "CHALICE_BUCKET_NAME": "chalice-example-c8ed3966fe4dcfa1"
+            },
+            "tags": {
+                "onset": "chalice"
+            }
+        }
     }
-  }
 }
